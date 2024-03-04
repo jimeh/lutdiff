@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"os"
@@ -14,6 +14,7 @@ type options struct {
 	start           string
 	target          string
 	output          string
+	skipToneCurve   bool
 	toneCurveIgnore []string
 }
 
@@ -41,6 +42,7 @@ target.json profile.`)
 	}
 
 	fs.StringVarP(&opts.output, "output", "o", "", "output file")
+	fs.BoolVarP(&opts.skipToneCurve, "skip-tone-curve", "s", false, "skip tone curve")
 	fs.StringArrayVarP(
 		&opts.toneCurveIgnore,
 		"ignore-tone-curve",
@@ -70,28 +72,28 @@ func mainE(args []string) error {
 		return err
 	}
 
-	start, err := readProfile(opts.start)
+	start, err := readDCPData(opts.start)
 	if err != nil {
 		return err
 	}
 
-	target, err := readProfile(opts.target)
+	target, err := readDCPData(opts.target)
 	if err != nil {
 		return err
 	}
 
-	profile, err := diffProfiles(start, target, opts)
+	profile, err := diffDCPData(start, target, opts)
 	if err != nil {
 		return err
 	}
 
 	if opts.output != "" {
-		err = writeProfile(opts.output, profile)
+		err = writeDCPData(opts.output, profile)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = printProfile(profile)
+		err = printDCPData(profile)
 		if err != nil {
 			return err
 		}
@@ -100,14 +102,14 @@ func mainE(args []string) error {
 	return nil
 }
 
-func readProfile(filename string) (*lut.Profile, error) {
+func readDCPData(filename string) (*lut.DCPData, error) {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	p := &lut.Profile{}
-	err = json.Unmarshal(b, &p)
+	p := &lut.DCPData{}
+	err = xml.Unmarshal(b, &p)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +117,7 @@ func readProfile(filename string) (*lut.Profile, error) {
 	return p, nil
 }
 
-func diffProfiles(start, target *lut.Profile, opts *options) (*lut.Profile, error) {
+func diffDCPData(start, target *lut.DCPData, opts *options) (*lut.DCPData, error) {
 	ignoreToneCurve := [][2]float64{}
 
 	for _, s := range opts.toneCurveIgnore {
@@ -128,7 +130,7 @@ func diffProfiles(start, target *lut.Profile, opts *options) (*lut.Profile, erro
 		ignoreToneCurve = append(ignoreToneCurve, [2]float64{a, b})
 	}
 
-	n, err := start.Diff(target, ignoreToneCurve)
+	n, err := start.Diff(target, opts.skipToneCurve, ignoreToneCurve)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +138,8 @@ func diffProfiles(start, target *lut.Profile, opts *options) (*lut.Profile, erro
 	return n, nil
 }
 
-func printProfile(profile *lut.Profile) error {
-	b, err := json.MarshalIndent(profile, "", "  ")
+func printDCPData(profile *lut.DCPData) error {
+	b, err := xml.MarshalIndent(profile, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -147,8 +149,8 @@ func printProfile(profile *lut.Profile) error {
 	return nil
 }
 
-func writeProfile(filename string, profile *lut.Profile) error {
-	b, err := json.MarshalIndent(profile, "", "  ")
+func writeDCPData(filename string, profile *lut.DCPData) error {
+	b, err := xml.MarshalIndent(profile, "", "  ")
 	if err != nil {
 		return err
 	}

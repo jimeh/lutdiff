@@ -65,10 +65,11 @@ func (p *Profile) Diff(
 	}
 
 	for i, row := range curveA {
-		for j, val := range row {
-			curveA[i][j] = (val * -1) + curveB[i][j]
-		}
+		row[0] = (row[0] * -1) + curveB[i][0]
+		row[1] = (row[1] * -1) + curveB[i][1]
 	}
+
+	n.ProfileToneCurve = curveA
 
 	return n, nil
 }
@@ -99,7 +100,7 @@ func filterToneCurve(
 	for _, row := range curve {
 		ignore := false
 		for _, val := range filters {
-			if row[0] != val[0] && row[1] != val[1] {
+			if row[0] == val[0] && row[1] == val[1] {
 				ignore = true
 				break
 			}
