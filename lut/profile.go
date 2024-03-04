@@ -31,7 +31,6 @@ func (p *Profile) Diff(
 	ignoreToneCurveValues [][2]float64,
 ) (*Profile, error) {
 	if other == nil {
-		fmt.Printf("other: %#v\n", other)
 		return nil, errors.New("other profile is nil")
 	}
 

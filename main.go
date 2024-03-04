@@ -53,7 +53,6 @@ target.json profile.`)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("fs.Args(): %#v\n", fs.Args())
 
 	if fs.NArg() != 2 {
 		return nil, errors.New("missing input files")
@@ -61,8 +60,6 @@ target.json profile.`)
 
 	opts.start = fs.Arg(0)
 	opts.target = fs.Arg(1)
-
-	fmt.Printf("opts: %#v\n", opts)
 
 	return opts, nil
 }
